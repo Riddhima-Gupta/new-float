@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 from typing import Any
 
+import streamlit as st
 from groq import Groq
 import pandas as pd
 import plotly.graph_objects as go
@@ -378,7 +379,7 @@ def query_groq(prompt: str, api_key: str) -> tuple[str | None, str | None]:
         return None, f"Groq API request failed: {exc}"
 
 
-def get_response(prompt: str, api_key: str, history: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+def get_response(prompt: str, history: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     """
     Generate a chatbot response and optional Plotly figure.
 
@@ -407,7 +408,18 @@ def get_response(prompt: str, api_key: str, history: list[dict[str, Any]] | None
     if history:
         llm_prompt = f"{query}\n\n{llm_prompt}"
 
-    groq_text, groq_error = query_groq(llm_prompt, api_key=api_key)
+    try:
+        client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": llm_prompt}],
+        )
+        groq_text = response.choices[0].message.content
+        groq_error = None
+    except Exception as exc:
+        groq_text = None
+        groq_error = str(exc)
+
     text = groq_text or fallback_response(prompt, df, float_id)
     result = {"text": text, "chart": chart}
     if groq_error:
