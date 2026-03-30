@@ -1,9 +1,9 @@
 [server]
 # Bind to localhost only
-address = "localhost"
+address = "0.0.0.0"
 
 # Let Streamlit choose an available port automatically
-port = 8000
+port = 8501
 
 headless = true
 enableCORS = false
